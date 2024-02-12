@@ -9,7 +9,7 @@
 //sentinel value to end rider mode
 #define SENTINEL_VALUE -1
 
-int getValidInt(int min, int max, int sentinel);
+double getValidDouble(int min, int max, int sentinel);
 double calculateFare(double base, double minuteCost, double mileCost, double minRate, double miles, int minutes);
 void printFare(int count, double miles, int minutes, double fare);
 
@@ -36,7 +36,7 @@ int main(void) {
 	printf("%s", "Welcome to UCCS Ride Share. We can only\n"
 		"provide services for rides from 1 to 100 miles.\n");
 	
-	int miles = getValidInt(minMiles, maxMiles , SENTINEL_VALUE);
+	double miles = getValidDouble(minMiles, maxMiles , SENTINEL_VALUE);
 
 	while (miles != SENTINEL_VALUE) {
 		totalRideCount += 1;
@@ -47,8 +47,9 @@ int main(void) {
 		totalMiles += miles;
 		totalMinutes += rideTime;
 		totalFare += rideTotal;
+		printf("\nCustomer Summary\n");
 		printFare(totalRideCount, miles, rideTime, rideTotal);
-		miles = getValidInt(minMiles, maxMiles, SENTINEL_VALUE);
+		miles = getValidDouble(minMiles, maxMiles, SENTINEL_VALUE);
 	}
 
 	printf("%s", "UCCS Ride Share Business Summary\n\n");
@@ -57,13 +58,13 @@ int main(void) {
 	return 0;
 }
 
-double getValidInt(int min, int max, int sentinel) {
+double getValidDouble(int min, int max, int sentinel) {
 	double miles = 0;
 	bool validInput = false;
 
 	while (!validInput) {
 		printf("%s", "\nEnter the number of miles to your desination: ");
-		if (scanf("%d", &miles) != 1) {
+		if (scanf("%lf", &miles) != 1) {
 			printf("%s", "Error: Invalid input. Please enter a number.\n");
 			while (getchar() != '\n');
 		}
@@ -91,7 +92,12 @@ double calculateFare(double base, double minuteCost, double mileCost, double min
 }
 
 void printFare(int count, double miles, int minutes, double fare) {
-	printf("%s", "\nCurrent Ride Information\n\n");
-	printf("%s", "Rider  Number of Miles  Number of Minutes  Ride Fare Amount\n");
-	printf("%d      %.1f             %d                 $%.2f\n", count, miles, minutes, fare);
+	if (count < 0) {
+		printf("%s", "\nCurrent Ride Information\n\n");
+		printf("%s", "Rider  Number of Miles  Number of Minutes  Ride Fare Amount\n");
+		printf("%d      %.1f             %d                 $%.2f\n", count, miles, minutes, fare);
+	}
+	else {
+		printf("There were no rides.");
+	}
 }
