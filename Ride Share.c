@@ -92,7 +92,7 @@ double calculateFare(double base, double minuteCost, double mileCost, double min
 }
 
 void printFare(int count, double miles, int minutes, double fare) {
-	if (count < 0) {
+	if (count != 0) {
 		printf("%s", "\nCurrent Ride Information\n\n");
 		printf("%s", "Rider  Number of Miles  Number of Minutes  Ride Fare Amount\n");
 		printf("%d      %.1f             %d                 $%.2f\n", count, miles, minutes, fare);
