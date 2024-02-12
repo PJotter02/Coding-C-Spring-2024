@@ -6,7 +6,7 @@
 // used to generate random number of minutes based on number of miles
 #define MIN_RAND_MINUTES_FACTOR 1.2
 #define MAX_RAND_MINUTES_FACTOR 1.5
-//sentinel value to end rider mode
+//sentinel value to end rider mode.
 #define SENTINEL_VALUE -1
 
 double getValidDouble(int min, int max, int sentinel);
@@ -30,7 +30,8 @@ int main(void) {
 	int totalMinutes = 0;
 	double totalFare = 0;
 
-	// generating random seed based of systems time
+	// generating random seed based of systems time for generating a random number
+	// between minRandomMinutes and maxRandomMinutes
 	srand(time(NULL));
 
 	printf("%s", "Welcome to UCCS Ride Share. We can only\n"
@@ -38,26 +39,35 @@ int main(void) {
 	
 	double miles = getValidDouble(minMiles, maxMiles , SENTINEL_VALUE);
 
+	// While loop that iterates until the sentinel value -1 
 	while (miles != SENTINEL_VALUE) {
 		totalRideCount += 1;
 		int minRandomMinutes = MIN_RAND_MINUTES_FACTOR * miles;
 		int maxRandomMinutes = MAX_RAND_MINUTES_FACTOR * miles;
+
+		//calculating ride time and price total for customer
 		int rideTime = rand() % (maxRandomMinutes - minRandomMinutes + 1) + minRandomMinutes;
 		double rideTotal = calculateFare(baseFare, costPerMinute, costPerMile, minFlatRate, miles, rideTime);
+
+		//incrementing total values for business owner
 		totalMiles += miles;
 		totalMinutes += rideTime;
 		totalFare += rideTotal;
+
 		printf("\nCustomer Summary\n");
 		printFare(totalRideCount, miles, rideTime, rideTotal);
 		miles = getValidDouble(minMiles, maxMiles, SENTINEL_VALUE);
 	}
 
+	// This part is for the business owner and executes once the sentinel value is input
 	printf("%s", "UCCS Ride Share Business Summary\n\n");
 	printFare(totalRideCount, totalMiles, totalMinutes, totalFare);
 
 	return 0;
 }
 
+// This function is for validating the user input for miles.
+// it ensurse the value is indeed a number and is between 1-100
 double getValidDouble(int min, int max, int sentinel) {
 	double miles = 0;
 	bool validInput = false;
