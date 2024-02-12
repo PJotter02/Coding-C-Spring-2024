@@ -92,6 +92,7 @@ double getValidDouble(int min, int max, int sentinel) {
 	return miles;
 }
 
+// Code for calculating the price of the trip
 double calculateFare(double base, double minuteCost, double mileCost, double minRate, double miles, int minutes) {
 	double total = base + (minuteCost * minutes) + (mileCost * miles);
 	if (total < minRate) {
@@ -101,6 +102,7 @@ double calculateFare(double base, double minuteCost, double mileCost, double min
 	return total;
 }
 
+// Code for printing customer overview and business overview
 void printFare(int count, double miles, int minutes, double fare) {
 	if (count != 0) {
 		printf("%s", "\nCurrent Ride Information\n\n");
