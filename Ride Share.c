@@ -57,12 +57,12 @@ int main(void) {
 	return 0;
 }
 
-int getValidInt(int min, int max, int sentinel) {
-	int miles = 0;
+double getValidInt(int min, int max, int sentinel) {
+	double miles = 0;
 	bool validInput = false;
 
 	while (!validInput) {
-		printf("%s", "Enter the number of miles to your desination: ");
+		printf("%s", "\nEnter the number of miles to your desination: ");
 		if (scanf("%d", &miles) != 1) {
 			printf("%s", "Error: Invalid input. Please enter a number.\n");
 			while (getchar() != '\n');
