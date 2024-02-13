@@ -46,7 +46,7 @@ int main(void) {
 		int maxRandomMinutes = MAX_RAND_MINUTES_FACTOR * miles;
 
 		//calculating ride time and price total for customer
-		int rideTime = rand() % (maxRandomMinutes - minRandomMinutes + 1) + minRandomMinutes;
+		int rideTime = minRandomMinutes + rand() % maxRandomMinutes;
 		double rideTotal = calculateFare(baseFare, costPerMinute, costPerMile, minFlatRate, miles, rideTime);
 
 		//incrementing total values for business owner
