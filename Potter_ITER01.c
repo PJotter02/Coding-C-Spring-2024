@@ -25,9 +25,9 @@ int main(void) {
 	double minFlatRate = 20.00;
 
 	// vars for keeping track of each ride
-	int totalRideCount = 0;
+	unsigned int totalRideCount = 0;
 	double totalMiles = 0;
-	int totalMinutes = 0;
+	unsigned int totalMinutes = 0;
 	double totalFare = 0;
 
 	// generating random seed based of systems time for generating a random number
