@@ -73,10 +73,13 @@ double getValidDouble(int min, int max, int sentinel) {
 	double miles = 0;
 	bool validInput = false;
 
+	// iterates until validInput is changed to true
 	while (!validInput) {
 		printf("%s", "\nEnter the number of miles to your desination: ");
 		if (scanf("%lf", &miles) != 1) {
 			printf("%s", "Error: Invalid input. Please enter a number.\n");
+
+			//code clears buffer
 			while (getchar() != '\n');
 		}
 		else if (miles == sentinel) {
@@ -95,7 +98,7 @@ double getValidDouble(int min, int max, int sentinel) {
 
 //Code for getting random time.
 int calculateRandomNumber(int min, int max) {
-	int time = min + rand() % max;
+	int time = rand() % (max-min +1) + min;
 	return time;
 }
 
