@@ -10,6 +10,7 @@
 #define SENTINEL_VALUE -1
 
 double getValidDouble(int min, int max, int sentinel);
+int calculateRandomNumber(int min, int max);
 double calculateFare(double base, double minuteCost, double mileCost, double minRate, double miles, int minutes);
 void printFare(int count, double miles, int minutes, double fare);
 
@@ -46,7 +47,7 @@ int main(void) {
 		int maxRandomMinutes = MAX_RAND_MINUTES_FACTOR * miles;
 
 		//calculating ride time and price total for customer
-		int rideTime = minRandomMinutes + rand() % maxRandomMinutes;
+		int rideTime = calculateRandomNumber(minRandomMinutes, maxRandomMinutes);
 		double rideTotal = calculateFare(baseFare, costPerMinute, costPerMile, minFlatRate, miles, rideTime);
 
 		//incrementing total values for business owner
@@ -90,6 +91,12 @@ double getValidDouble(int min, int max, int sentinel) {
 	}
 
 	return miles;
+}
+
+//Code for getting random time.
+int calculateRandomNumber(int min, int max) {
+	int time = min + rand() % max;
+	return time;
 }
 
 // Code for calculating the price of the trip
