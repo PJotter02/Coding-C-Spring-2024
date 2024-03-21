@@ -7,6 +7,7 @@
 // used to generate random number of minutes based on number of miles
 #define MIN_RAND_MINUTES_FACTOR 1.2
 #define MAX_RAND_MINUTES_FACTOR 1.5
+#define RIDERS 30
 #define CATEGORIES 3
 #define SIZE_STRING 80
 #define MAX_ATTEMPT 4
@@ -21,7 +22,8 @@ typedef struct rideshare {
 	double costPerMile;
 	double totalCostPerMile;
 	double minFlatRate;
-	int rating[][CATEGORIES];
+	unsigned int surveyCount;
+	int rating[surveyCount][CATEGORIES];
 	char organizationName[SIZE_STRING];
 } RideShare;
 
@@ -158,27 +160,26 @@ int validLogin(const char* correctLogin, const char* correctPass, int size, int 
 	char* passPtr = pass;
 
 	//Why does it not jum out of while loop even if attempts exceeds maxAttempts aka 4
-	while (attempts < maxAttempts) {
+	bool correctLogin = false;
+	while (attempts < maxAttempts || !correctLogin) {
 		printf("%s\n", "Enter your username: ");
 		//investigate &login
-		fgets(loginPtr, size, stdin);
 		FgetsRemoveNewLine(loginPtr);
-
 
 		//While loop to compare logins
 		while (strcmp(login, correctLogin) != 0) {
 			printf("%s\n", "Incorrect username. Retry.");
 			printf("%s", "Enter your username: ");
-			fgets(login, size, stdin);
+			FgetsRemoveNewLine(loginPtr);
 			attempts++;
 		}
 		printf("%s", "Enter your password: ");
-		fgets(passPtr, size, stdin);
+		FgetsRemoveNewLine(passPtr);
 
 		while (strcmp(pass, correctPass) != 0) {
 			printf("%s\n", "Incorrect password. Retry.");
 			printf("%s", "Enter your password: ");
-			fgets(pass, size, stdin);
+			FgetsRemoveNewLine(passPtr);
 			attempts++;
 		}
 		return 1;
@@ -195,9 +196,21 @@ void FgetsRemoveNewLine(char* string) {
 }
 
 void setUp(RideShare* rideShare) {
+	int min = 0;
+	int max = 4;
 	printf("%s\n", "Enter the amount base fare: ");
+	rideShare->baseFare = getValidDouble(min, max, SENTINEL_VALUE);
 	printf("%s\n", "Enter the amount cost per minute: ");
+	rideShare->costPerMin = getValidDouble(min, max, SENTINEL_VALUE);
 	printf("%s\n", "Enter the amount cost per mile: ");
+	rideShare->costPerMile = getValidDouble(min, max, SENTINEL_VALUE);
 	printf("%s\n", "Enter the amount min flat rate: ");
+	rideShare->minFlatRate = getValidDouble(min, max, SENTINEL_VALUE);
 	printf("%s\n", "Enter orgnization name: ");
+	fgets(rideShare->organizationName, SIZE_STRING, stdin);
+	printf("%s%.2f","Base fare: ", rideShare->baseFare);
+	printf("%.2f","Cost per minute: ", rideShare->costPerMin);
+	printf("%s%.2f","Cost per mile: ", rideShare->costPerMile);
+	printf("%s%.2f","Min flat rate: ", rideShare->minFlatRate);
+	printf("%s%s","Organization Name: ", rideShare->organizationName);
 }
