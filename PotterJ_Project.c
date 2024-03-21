@@ -195,5 +195,9 @@ void FgetsRemoveNewLine(char* string) {
 }
 
 void setUp(RideShare* rideShare) {
-
+	printf("%s\n", "Enter the amount base fare: ");
+	printf("%s\n", "Enter the amount cost per minute: ");
+	printf("%s\n", "Enter the amount cost per mile: ");
+	printf("%s\n", "Enter the amount min flat rate: ");
+	printf("%s\n", "Enter orgnization name: ");
 }
