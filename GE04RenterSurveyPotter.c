@@ -14,6 +14,7 @@ int main(void) {
 	const char* surveyCategories[CATEGORIES] = { "Safety", "Cleanliness", "Comfort" };
     int surveyCount = 0;
 
+
     getRatings(rideShareSurvey, surveyCategories, &surveyCount, CATEGORIES);
     getRatings(rideShareSurvey, surveyCategories, &surveyCount, CATEGORIES);
     getRatings(rideShareSurvey, surveyCategories, &surveyCount, CATEGORIES);
@@ -37,15 +38,16 @@ void printCategories(const char* categories[], size_t totalCategories)
 }
 
 // function to fill rideShareSurvey in main
+
 void getRatings(int rideShareSurvey[][CATEGORIES],const char* surveyCategories[], int *surveyCount, size_t totalCategories) {
-    printf("Enter ratings for each category (1-5) for the renter:\n");
+    printf("Enter rating for each category (1-5): \n");
 
     // size_t iterates through an array in bit sized chunks
     for (size_t categorie = 0; categorie < totalCategories; categorie++) {
         printf("%s: ", surveyCategories[categorie]);
         scanf("%d", &rideShareSurvey[*surveyCount][categorie]);
     }
-    (*surveyCount) += 1;
+    *surveyCount += 1;
 }
 
 // function to print rideShareSurvey 2d array in main
