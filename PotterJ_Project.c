@@ -19,7 +19,6 @@ typedef struct rideshare {
 	double baseFare;
 	double costPerMin;
 	double costPerMile;
-	double totalCostPerMile;
 	double minFlatRate;
 	unsigned int surveyCount;
 	unsigned int totalMinutes;
@@ -34,7 +33,7 @@ double getValidDouble(int min, int max, int sentinel);
 int calculateRandomNumber(int min, int max);
 double calculateFare(double base, double minuteCost, double mileCost, double minRate, double miles, int minutes);
 void printFare(int count, double miles, int minutes, double fare);
-double scanDouble(const char* buff);
+bool scanDouble(const char* buff, double *validNumber);
 void FgetsRemoveNewLine(char* string);
 void RidersMode(double baseFare, double costPerMin, double costPerMile, double minFlatRate, const char name, int totalMinutes, double totalMiles
 , double totalFare, int sentinel);
@@ -46,15 +45,12 @@ char getYorN();
 int main(void) {
 	const char correctLogin[] = "Admin";
 	const char correctPass[] = "Admin";
-	char number[SIZE_STRING];
-	/*fgets(number, SIZE_STRING, stdin);
-	FgetsRemoveNewLine(number);
-	scanDouble(number);
-	*/
 	if (LoginAdmin(correctLogin, correctPass, SIZE_STRING, MAX_ATTEMPT) == true) {
 		RideShare rideShare;
 		RideShare* rideSharePtr = &rideShare;
 		setUp(rideSharePtr);
+		RidersMode(rideShare.baseFare, rideShare.costPerMin, rideShare.costPerMile, rideShare.minFlatRate, rideShare.organizationName,
+			rideShare.totalMinutes, rideShare.totalMiles, rideShare.totalFare, SENTINEL_VALUE);
 
 		double totalMiles = 0;
 		double totalFare = 0;
@@ -139,30 +135,36 @@ double getValidDouble(int min, int max, int sentinel) {
 	return miles;
 }
 
-double scanDouble(const char* buff) {
+bool scanDouble(const char* buffer, double *validNumber) {
 	char* end;
-	int validDouble = 0;
-	double intTest = strtod(buff, &end);
+	*validNumber = 0;
+	double intTest = strtod(buffer, &end);
 
-	if (end == buff) {
-		printf("%s is not a decimal number", buff);
-	}
-	else if ('\0' != *end) {
-		printf("%s: extra characters at end of input: %s\n", buff, end);
-	}
-	else if ((DBL_MIN == intTest || DBL_MAX == intTest) && ERANGE == errno) {
-		printf("%s out of range of type double\n", buff);
-	}
-	else if (intTest > INT_MAX) {
-		printf("%ld greater than INT_MAX\n", intTest);
-	}
-	else if (intTest < INT_MIN) {
-		printf("%ld less than INT_MIN\n", intTest);
-	}
-	else {
-		validDouble = (double)intTest;
-		printf("%d is integer value ", validDouble);
-	}
+		if (end == buffer) {
+			printf("%s is not a number", buffer);
+			return false;
+		}
+		else if ('\0' != *end) {
+			printf("%s: extra characters at end of input: %s\n", buffer, end);
+			return false;
+		}
+		else if ((DBL_MIN == intTest || DBL_MAX == intTest) && ERANGE == errno) {
+			printf("%s out of range of type double\n", buffer);
+			return false;
+		}
+		else if (intTest > INT_MAX) {
+			printf("%.2f greater than %d\n", intTest, INT_MAX);
+			return false;
+		}
+		else if (intTest < INT_MIN) {
+			printf("%.2f less than %d\n", intTest, INT_MIN);
+			return false;
+		}
+		else {
+			*validNumber = (double)intTest;
+			printf("%d is integer value ", validNumber);
+			return true;
+		}
 }
 
 //Code for getting random time.
@@ -236,28 +238,53 @@ void FgetsRemoveNewLine(char* stringPtr) {
 }
 
 void setUp(RideShare* rideShare) {
-	char input[SIZE_STRING];
-	printf("%s\n", "Enter the amount base fare: ");
-	FgetsRemoveNewLine(input);
-	rideShare->baseFare = scanDouble(input);
+	double min = 0.1;
+	double max = 50;
 
+	char input[SIZE_STRING];
+	double number = 0;
+
+	//Promting user for baseFare
+	printf("%s", "Enter the amount base fare: ");
+	FgetsRemoveNewLine(input);
+	while (!scanDouble(input, &number) || number > max || number < min) {
+		printf("%s", "\nInvalid input. Enter base fare: ");
+		FgetsRemoveNewLine(input);
+	}
+	rideShare->baseFare = number;
+
+	//Promting user for costPerMin
 	printf("%s\n", "Enter the amount cost per minute: ");
 	FgetsRemoveNewLine(input);
-	rideShare->costPerMin = scanDouble(input);
+	while (!scanDouble(input, &number) || number > max || number < min) {
+		printf("%s", "\nInvalid input. Enter cost per min: ");
+		FgetsRemoveNewLine(input);
+	}
+	rideShare->costPerMin = number;
 
+	//Promting user for costPerMile
 	printf("%s\n", "Enter the amount cost per mile: ");
 	FgetsRemoveNewLine(input);
-	rideShare->costPerMile = scanDouble(input);
+	while (!scanDouble(input, &number) || number > max || number < min) {
+		printf("%s", "\nInvalid input. Enter cost per mile: ");
+		FgetsRemoveNewLine(input);
+	}
+	rideShare->costPerMile = number;
 
+	//Promting user for minFlatRate
 	printf("%s\n", "Enter the amount min flat rate: ");
 	FgetsRemoveNewLine(input);
-	rideShare->minFlatRate = scanDouble(input);
+	while (!scanDouble(input, &number) || number > max || number < min) {
+		printf("%s", "\nInvalid input. Enter min flat rate: ");
+		FgetsRemoveNewLine(input);
+	}
+	rideShare->minFlatRate = number;
 
 	printf("%s\n", "Enter orgnization name: ");
 	fgets(rideShare->organizationName, SIZE_STRING, stdin);
 
 	printf("%s%.2f","Base fare: ", rideShare->baseFare);
-	printf("%.2f","Cost per minute: ", rideShare->costPerMin);
+	printf("%s%.2f","Cost per minute: ", rideShare->costPerMin);
 	printf("%s%.2f","Cost per mile: ", rideShare->costPerMile);
 	printf("%s%.2f","Min flat rate: ", rideShare->minFlatRate);
 	printf("%s%s","Organization Name: ", rideShare->organizationName);
@@ -265,9 +292,9 @@ void setUp(RideShare* rideShare) {
 
 void getSurveyRatings(int surveyRatings[][CATEGORIES], int* surveyCount, size_t totalCategories, int min, int max) {
 
-	for (size_t categories; categories < totalCategories; categories++) {
+	for (size_t categories = 0; categories < totalCategories; categories++) {
 		printf("%s", "Enter categories rating: ");
-		//surveyRatings[*surveyCount][categories] = getValid(min, max);
+		//surveyRatings[*surveyCount][categories] = 
 	}
 	*surveyCount++;
 }
