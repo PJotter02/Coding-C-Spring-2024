@@ -9,10 +9,11 @@
 #define MIN_RAND_MINUTES_FACTOR 1.2
 #define MAX_RAND_MINUTES_FACTOR 1.5
 #define MAX_SURVEY 7
+#define MIN_RATING 1
+#define MAX_RATING 5
 #define CATEGORIES 3
 #define SIZE_STRING 80
 #define MAX_ATTEMPT 4
-//sentinel value to end rider mode.
 #define SENTINEL_VALUE -1
 
 typedef struct rideshare {
@@ -24,108 +25,113 @@ typedef struct rideshare {
 	unsigned int totalMinutes;
 	double totalMiles;
 	double totalFare;
+	double totalRideCount;
+	char *categoryNames[CATEGORIES];
 	int rating[MAX_SURVEY][CATEGORIES];
+	double surveyAvg[CATEGORIES];
 	char organizationName[SIZE_STRING];
 } RideShare;
 
 bool LoginAdmin(const char* correctLogin, const char* correctPass, int size, int maxAttempts);
-double getValidDouble(int min, int max, int sentinel);
+double getValidDoubleSentinel(int min, int max, int sentinel);
+double getValidDouble(int min, int max);
 int calculateRandomNumber(int min, int max);
 double calculateFare(double base, double minuteCost, double mileCost, double minRate, double miles, int minutes);
 void printFare(int count, double miles, int minutes, double fare);
 bool scanDouble(const char* buff, double *validNumber);
 void FgetsRemoveNewLine(char* string);
-void RidersMode(double baseFare, double costPerMin, double costPerMile, double minFlatRate, const char name, int totalMinutes, double totalMiles
-, double totalFare, int sentinel);
-void getSurveyRatings(int surveyRatings[][CATEGORIES], int* surveyCount, size_t totalCategories, int min, int max);
+void RidersMode(double baseFare, double costPerMin, double costPerMile, double minFlatRate, const char* name, int totalMinutes, double totalMiles
+	, double totalFare, int totalRideCount, int surveyRatings[][CATEGORIES], int surveyCount, const char* username, const char* password,
+	double surveyAvg[CATEGORIES], const char categoryNames[CATEGORIES]);
+void getSurveyRatings(int surveyRatings[][CATEGORIES], const char categoryNames[CATEGORIES], int* surveyCount, size_t totalCategories, int min, int max);
+void calculateSurveyAvg(const int surveyRatings[][CATEGORIES], double surveyAvg[CATEGORIES], int surveyCount, size_t totalCategories);
+void displaySurveyAvg(const double surveyAvg[CATEGORIES]);
+void displaySurveyRatings(const int surveyRatings[][CATEGORIES], int surveyCount);
 void setUp(RideShare* rideShare);
 char getYorN();
 
 
 int main(void) {
+	//Generates random seed to calculate a random number
+	srand((unsigned int)time(NULL));
+
+	//Admin login
 	const char correctLogin[] = "Admin";
 	const char correctPass[] = "Admin";
+
 	if (LoginAdmin(correctLogin, correctPass, SIZE_STRING, MAX_ATTEMPT) == true) {
 		RideShare rideShare;
 		RideShare* rideSharePtr = &rideShare;
 		setUp(rideSharePtr);
 		RidersMode(rideShare.baseFare, rideShare.costPerMin, rideShare.costPerMile, rideShare.minFlatRate, rideShare.organizationName,
-			rideShare.totalMinutes, rideShare.totalMiles, rideShare.totalFare, SENTINEL_VALUE);
+			rideShare.totalMinutes, rideShare.totalMiles, rideShare.totalFare, rideShare.totalRideCount, rideShare.rating, rideShare.surveyCount
+		, correctLogin, correctPass, rideShare.surveyAvg, rideShare.categoryNames);
 
-		double totalMiles = 0;
-		double totalFare = 0;
-		int totalMinutes = 0;
-		int totalRideCount = 0;
-		//Boolean flag
-		bool continueRider = false;
-		while (!continueRider) {
-			int totalRideCount = 0;
-			int baseFare = 1;
-			int costPerMinute = 1;
-			int costPerMile = 1;
-			int minFlatRate = 1;
-			//min and max miles range
-			int minMiles = 1;
-			int maxMiles = 100;
-
-			// generating random seed based of systems time for generating a random number
-			// between minRandomMinutes and maxRandomMinutes
-			srand(time(NULL));
-
-			printf("%s", "Welcome to UCCS Ride Share. We can only\n"
-				"provide services for rides from 1 to 100 miles.\n");
-
-			double miles = getValidDouble(minMiles, maxMiles, SENTINEL_VALUE);
-
-			// While loop that iterates until the sentinel value -1 
-			while (miles != SENTINEL_VALUE) {
-				totalRideCount += 1;
-				int minRandomMinutes = MIN_RAND_MINUTES_FACTOR * miles;
-				int maxRandomMinutes = MAX_RAND_MINUTES_FACTOR * miles;
-
-				//calculating ride time and price total for customer
-				int rideTime = calculateRandomNumber(minRandomMinutes, maxRandomMinutes);
-				double rideTotal = calculateFare(baseFare, costPerMinute, costPerMile, minFlatRate, miles, rideTime);
-
-				//incrementing total values for business owner
-				totalMiles += miles;
-				totalMinutes += rideTime;
-				totalFare += rideTotal;
-
-				printf("\nCustomer Summary\n");
-				printFare(totalRideCount, miles, rideTime, rideTotal);
-				miles = getValidDouble(minMiles, maxMiles, SENTINEL_VALUE);
-			}
-		}
-
-		// This part is for the business owner and executes once the sentinel value is input
-		printf("%s", "UCCS Ride Share Business Summary\n\n");
-		printFare(totalRideCount, totalMiles, totalMinutes, totalFare);
 	}
 	printf("%s", "You reached the max amount of login attempts");
 	return 0;
 }
 
+char getYorN() {
+	char input;
+	bool end = false;
+
+	while (!end) {
+		int YorN = getchar();
+		input = (char)YorN;
+
+		while (getchar() != '\n');
+
+		if (input == 'y' || input == 'Y' || input == 'n' || input == 'N') {
+			end = true;
+		}
+		else {
+			printf("%s", "Enter Y or N: ");
+		}
+	}
+	return input;
+}
+
+//Function for getting a valid double between a set range
+double getValidDouble(int min, int max) {
+	double number = 0;
+	bool validInput = false;
+	char input[SIZE_STRING] = "";
+	while (!validInput) {
+		//printf("%s%d%s%d", "Enter a number between ", min, " & ", max);
+		FgetsRemoveNewLine(&input);
+		if (scanDouble(&input, &number) == false) {
+			printf("%s", "Enter a number.");
+		}
+		else if (number > max || number < min) {
+			printf("%s", "Number is out of range");
+		}
+		else {
+			validInput = true;
+			return number;
+		}
+	}
+}
+
 // This function is for validating the user input for miles.
 // it ensurse the value is indeed a number and is between 1-100
-double getValidDouble(int min, int max, int sentinel) {
+double getValidDoubleSentinel(int min, int max, int sentinel) {
 	double miles = 0;
 	bool validInput = false;
-
+	char input[SIZE_STRING] = "";
 	// iterates until validInput is changed to true
 	while (!validInput) {
-		printf("%s", "\nEnter the number of miles to your desination: ");
-		if (scanf("%lf", &miles) != 1) {
+		FgetsRemoveNewLine(&input);
+		if (scanDouble(&input, &miles) == false) {
 			printf("%s", "Error: Invalid input. Please enter a number.\n");
 
-			//code clears buffer
 			while (getchar() != '\n');
 		}
 		else if (miles == sentinel) {
 			validInput = true;
 		}
 		else if (miles < min || miles > max) {
-			printf("%s", "Error: Miles must be between 1 and 100.\n");
+			printf("%s", "Error: Entry out of range. Enter value between 0-100: \n");
 		}
 		else {
 			validInput = true;
@@ -135,34 +141,29 @@ double getValidDouble(int min, int max, int sentinel) {
 	return miles;
 }
 
+//Acts like scanf for doubles
 bool scanDouble(const char* buffer, double *validNumber) {
 	char* end;
 	*validNumber = 0;
 	double intTest = strtod(buffer, &end);
 
 		if (end == buffer) {
-			printf("%s is not a number", buffer);
 			return false;
 		}
 		else if ('\0' != *end) {
-			printf("%s: extra characters at end of input: %s\n", buffer, end);
 			return false;
 		}
 		else if ((DBL_MIN == intTest || DBL_MAX == intTest) && ERANGE == errno) {
-			printf("%s out of range of type double\n", buffer);
 			return false;
 		}
 		else if (intTest > INT_MAX) {
-			printf("%.2f greater than %d\n", intTest, INT_MAX);
 			return false;
 		}
 		else if (intTest < INT_MIN) {
-			printf("%.2f less than %d\n", intTest, INT_MIN);
 			return false;
 		}
 		else {
 			*validNumber = (double)intTest;
-			printf("%d is integer value ", validNumber);
 			return true;
 		}
 }
@@ -195,6 +196,7 @@ void printFare(int count, double miles, int minutes, double fare) {
 	}
 }
 
+//Function to prompt admin to login
 bool LoginAdmin(const char* correctUsername, const char* correctPass, int size, int maxAttempts) {
 	int attempts = 0;
 	char username[SIZE_STRING];
@@ -229,6 +231,7 @@ bool LoginAdmin(const char* correctUsername, const char* correctPass, int size, 
 	return true;
 }
 
+//Removes new line character
 void FgetsRemoveNewLine(char* stringPtr) {
 	fgets(stringPtr, SIZE_STRING, stdin);
 	int strLength = strlen(stringPtr);
@@ -237,9 +240,16 @@ void FgetsRemoveNewLine(char* stringPtr) {
 	}
 }
 
+//Function to set up the ride share variables
 void setUp(RideShare* rideShare) {
 	double min = 0.1;
 	double max = 50;
+	rideShare->totalFare = 0;
+	rideShare->totalMiles = 0;
+	rideShare->totalMinutes = 0;
+	rideShare->totalRideCount = 0;
+	rideShare->surveyCount = 0;
+	rideShare->categoryNames = { "Safety", "Cleanliness", "Comfort" };
 
 	char input[SIZE_STRING];
 	double number = 0;
@@ -281,20 +291,123 @@ void setUp(RideShare* rideShare) {
 	rideShare->minFlatRate = number;
 
 	printf("%s\n", "Enter orgnization name: ");
-	fgets(rideShare->organizationName, SIZE_STRING, stdin);
+	FgetsRemoveNewLine(rideShare->organizationName);
 
-	printf("%s%.2f","Base fare: ", rideShare->baseFare);
-	printf("%s%.2f","Cost per minute: ", rideShare->costPerMin);
-	printf("%s%.2f","Cost per mile: ", rideShare->costPerMile);
-	printf("%s%.2f","Min flat rate: ", rideShare->minFlatRate);
-	printf("%s%s","Organization Name: ", rideShare->organizationName);
+	printf("%s%.2f\n","Base fare: ", rideShare->baseFare);
+	printf("%s%.2f\n","Cost per minute: ", rideShare->costPerMin);
+	printf("%s%.2f\n","Cost per mile: ", rideShare->costPerMile);
+	printf("%s%.2f\n","Min flat rate: ", rideShare->minFlatRate);
+	printf("%s%s\n","Organization Name: ", rideShare->organizationName);
 }
 
-void getSurveyRatings(int surveyRatings[][CATEGORIES], int* surveyCount, size_t totalCategories, int min, int max) {
-
+//Function to store survey ratings in surveyRatings array
+void getSurveyRatings(int surveyRatings[][CATEGORIES], const char categoryNames[CATEGORIES], int* surveyCount, size_t totalCategories, int min, int max) {
+	int name = 0;
 	for (size_t categories = 0; categories < totalCategories; categories++) {
-		printf("%s", "Enter categories rating: ");
-		//surveyRatings[*surveyCount][categories] = 
+		printf("%s%s%s%d%s%d%s", "Enter ", &categoryNames[name], " rating(" , min , "-" , max , ")");
+		surveyRatings[*surveyCount][categories] = getValidDouble(min, max);
+		name++;
 	}
-	*surveyCount++;
+	surveyCount++;
+}
+
+//Function to display current ratings
+void displaySurveyRatings(const int surveyRatings[][CATEGORIES], int surveyCount) {
+	printf("Survey Results:\n");
+	if (surveyCount > 0) {
+		printf("%s", "\tSafety\tCleanliness\tComfort\n");
+		for (int i = 0; i < surveyCount; i++) {
+			printf("Survey #%d", i);
+			for (int e = 0; e < CATEGORIES; e++) {
+				printf("\t%d\t", surveyRatings[i][e]);
+			}
+			printf("\n");
+		}
+	}
+	else {
+		printf("%s", "No ratings currently\n");
+	}
+}
+
+void calculateSurveyAvg(const int surveyRatings[][CATEGORIES], double surveyAvg[CATEGORIES], int surveyCount, size_t totalCategories) {
+	// size_t iterates through an array in bit sized chunks
+	for (size_t categories = 0; categories < totalCategories; categories++) {
+		double average = 0;
+		for (int i = 0; i < surveyCount; i++) {
+			average += surveyRatings[i][categories];
+		}
+		surveyAvg[categories] = average / surveyCount;
+	}
+}
+
+void displaySurveyAvg(const double surveyAvg[CATEGORIES]) {
+	printf("%s", "Survey Averages:\n");
+	printf("%s", "\tSafety\tCleanliness\tComfort\n");
+	for (int i = 0; i < CATEGORIES; i++) {
+		printf("\t%.2f\t", surveyAvg[i]);
+	}
+}
+
+void RidersMode(double baseFare, double costPerMin, double costPerMile, double minFlatRate, const char *name, int totalMinutes, double totalMiles
+, double totalFare, int totalRideCount , int surveyRatings[][CATEGORIES], int surveyCount, const char *username, const char *password,
+double surveyAvg[CATEGORIES], const char categoryNames[CATEGORIES]) {
+	int minMiles = 0;
+	int maxMiles = 100;
+	totalRideCount = 0;
+	totalFare = 0;
+	totalMinutes = 0;
+	totalMiles = 0;
+
+	bool endRider = false;
+
+	while (!endRider) {
+		printf("%s%s%s", "\nWelcome to ", name, " Ride Share. We can only "
+			"provide services for rides from 1 to 100 miles.\n");
+		displaySurveyRatings(surveyRatings, surveyCount);
+
+		printf("%s", "Do you want to take a ride? Y or N?");
+		char YorN = getYorN();
+		if (YorN == 'Y' || YorN == 'y') {
+			printf("%s", "Enter the number of miles your travelling? 1-100: ");
+			double miles = getValidDoubleSentinel(minMiles, maxMiles, SENTINEL_VALUE);
+			if (miles == SENTINEL_VALUE) {
+				if (LoginAdmin(username, password, SIZE_STRING, MAX_ATTEMPT) == true) {
+					endRider = true;
+				}
+			}
+			else {
+				totalRideCount += 1;
+				int minRandomMinutes = MIN_RAND_MINUTES_FACTOR * miles;
+				int maxRandomMinutes = MAX_RAND_MINUTES_FACTOR * miles;
+
+				//calculating ride time and price total for customer
+				int rideTime = calculateRandomNumber(minRandomMinutes, maxRandomMinutes);
+				double rideTotal = calculateFare(baseFare, costPerMin, costPerMile, minFlatRate, miles, rideTime);
+
+				//incrementing total values for business owner
+				totalMiles += miles;
+				totalMinutes += rideTime;
+				totalFare += rideTotal;
+
+				printf("\nCustomer Summary\n");
+				printFare(totalRideCount, miles, rideTime, rideTotal);
+
+				printf("%s", "Do you want to take survey? Y or N:");
+				YorN = getYorN();
+				if (YorN == 'Y' || YorN == 'y') {
+					getSurveyRatings(surveyRatings, categoryNames,&surveyCount, CATEGORIES, MIN_RATING, MAX_RATING);
+					surveyCount++;
+					printf("%s", "Thanks for your feedback. Have a great day! ");
+				}
+				else {
+					printf("%s", "Thanks for riding! Have a splendid day!");
+				}
+			}
+		}
+	}
+	// This part is for the business owner and executes once the sentinel value is input
+	printf("%s", "UCCS Ride Share Business Summary\n\n");
+	printFare(totalRideCount, totalMiles, totalMinutes, totalFare);
+	calculateSurveyAvg(surveyRatings, surveyAvg, surveyCount, CATEGORIES);
+	displaySurveyAvg(surveyAvg);
 }
