@@ -12,6 +12,8 @@
 #define MIN_RATING 1
 #define MAX_RATING 5
 #define CATEGORIES 3
+#define CORRECT_ID "id1"
+#define CORRECT_PASSCODE "ABCD"
 #define SIZE_STRING 80
 #define MAX_ATTEMPT 4
 #define SENTINEL_VALUE -1
@@ -26,7 +28,7 @@ typedef struct rideshare {
 	double totalMiles;
 	double totalFare;
 	double totalRideCount;
-	char *categoryNames[CATEGORIES];
+	char categoryNames[CATEGORIES][SIZE_STRING];
 	int rating[MAX_SURVEY][CATEGORIES];
 	double surveyAvg[CATEGORIES];
 	char organizationName[SIZE_STRING];
@@ -42,30 +44,27 @@ bool scanDouble(const char* buff, double *validNumber);
 void FgetsRemoveNewLine(char* string);
 void RidersMode(double baseFare, double costPerMin, double costPerMile, double minFlatRate, const char* name, int totalMinutes, double totalMiles
 	, double totalFare, int totalRideCount, int surveyRatings[][CATEGORIES], int surveyCount, const char* username, const char* password,
-	double surveyAvg[CATEGORIES], const char categoryNames[CATEGORIES]);
-void getSurveyRatings(int surveyRatings[][CATEGORIES], const char categoryNames[CATEGORIES], int* surveyCount, size_t totalCategories, int min, int max);
+	double surveyAvg[CATEGORIES]);
+void getSurveyRatings(int surveyRatings[][CATEGORIES], const char *categoryNames[CATEGORIES], int* surveyCount, size_t totalCategories, int min, int max);
 void calculateSurveyAvg(const int surveyRatings[][CATEGORIES], double surveyAvg[CATEGORIES], int surveyCount, size_t totalCategories);
-void displaySurveyAvg(const double surveyAvg[CATEGORIES]);
-void displaySurveyRatings(const int surveyRatings[][CATEGORIES], int surveyCount);
+void displaySurveyAvg(const double surveyAvg[CATEGORIES], const char* categoryNames[CATEGORIES]);
+void displaySurveyRatings(const int surveyRatings[][CATEGORIES], const char *categoryNames[CATEGORIES], int surveyCount);
 void setUp(RideShare* rideShare);
 char getYorN();
 
+const char* surveyCategories[CATEGORIES] = { "Safety", "Cleanliness", "Comfort" };
 
 int main(void) {
 	//Generates random seed to calculate a random number
 	srand((unsigned int)time(NULL));
 
-	//Admin login
-	const char correctLogin[] = "Admin";
-	const char correctPass[] = "Admin";
-
-	if (LoginAdmin(correctLogin, correctPass, SIZE_STRING, MAX_ATTEMPT) == true) {
+	if (LoginAdmin(CORRECT_ID, CORRECT_PASSCODE, SIZE_STRING, MAX_ATTEMPT) == true) {
 		RideShare rideShare;
 		RideShare* rideSharePtr = &rideShare;
 		setUp(rideSharePtr);
 		RidersMode(rideShare.baseFare, rideShare.costPerMin, rideShare.costPerMile, rideShare.minFlatRate, rideShare.organizationName,
 			rideShare.totalMinutes, rideShare.totalMiles, rideShare.totalFare, rideShare.totalRideCount, rideShare.rating, rideShare.surveyCount
-		, correctLogin, correctPass, rideShare.surveyAvg, rideShare.categoryNames);
+		, CORRECT_ID, CORRECT_PASSCODE, rideShare.surveyAvg);
 
 	}
 	printf("%s", "You reached the max amount of login attempts");
@@ -212,18 +211,24 @@ bool LoginAdmin(const char* correctUsername, const char* correctPass, int size, 
 		while (strcmp(username, correctUsername) != 0) {
 			printf("%s", "Enter your username: ");
 			FgetsRemoveNewLine(usernamePtr);
-			attempts++;
-			if (attempts > maxAttempts) {
-				return false;
+			if (strcmp(username, correctUsername) != 0) {
+				printf("%s\n", "Invalid login.");
+				attempts++;
+				if (attempts >= maxAttempts) {
+					return false;
+				}
 			}
 		}
 
 		while (strcmp(pass, correctPass) != 0) {
 			printf("%s", "Enter your password: ");
 			FgetsRemoveNewLine(passPtr);
-			attempts++;
-			if (attempts > maxAttempts) {
-				return false;
+			if (strcmp(pass, correctPass) != 0) {
+				printf("%s\n", "Incorrect password.");
+				attempts++;
+				if (attempts >= maxAttempts) {
+					return false;
+				}
 			}
 		}
 		correctLogin = true;
@@ -249,7 +254,6 @@ void setUp(RideShare* rideShare) {
 	rideShare->totalMinutes = 0;
 	rideShare->totalRideCount = 0;
 	rideShare->surveyCount = 0;
-	rideShare->categoryNames = { "Safety", "Cleanliness", "Comfort" };
 
 	char input[SIZE_STRING];
 	double number = 0;
@@ -301,10 +305,10 @@ void setUp(RideShare* rideShare) {
 }
 
 //Function to store survey ratings in surveyRatings array
-void getSurveyRatings(int surveyRatings[][CATEGORIES], const char categoryNames[CATEGORIES], int* surveyCount, size_t totalCategories, int min, int max) {
+void getSurveyRatings(int surveyRatings[][CATEGORIES], const char *categoryNames[CATEGORIES], int* surveyCount, size_t totalCategories, int min, int max) {
 	int name = 0;
 	for (size_t categories = 0; categories < totalCategories; categories++) {
-		printf("%s%s%s%d%s%d%s", "Enter ", &categoryNames[name], " rating(" , min , "-" , max , ")");
+		printf("%s%s%s%d%s%d%s", "Enter ", categoryNames[name], " rating(" , min , "-" , max , ")");
 		surveyRatings[*surveyCount][categories] = getValidDouble(min, max);
 		name++;
 	}
@@ -312,10 +316,13 @@ void getSurveyRatings(int surveyRatings[][CATEGORIES], const char categoryNames[
 }
 
 //Function to display current ratings
-void displaySurveyRatings(const int surveyRatings[][CATEGORIES], int surveyCount) {
+void displaySurveyRatings(const int surveyRatings[][CATEGORIES], const char *categoryNames[CATEGORIES], int surveyCount) {
 	printf("Survey Results:\n");
 	if (surveyCount > 0) {
-		printf("%s", "\tSafety\tCleanliness\tComfort\n");
+		for (int i = 0; i < CATEGORIES; i++) {
+			printf("\t\t%s", categoryNames[i]);
+		}
+		puts("\n");
 		for (int i = 0; i < surveyCount; i++) {
 			printf("Survey #%d", i);
 			for (int e = 0; e < CATEGORIES; e++) {
@@ -340,18 +347,21 @@ void calculateSurveyAvg(const int surveyRatings[][CATEGORIES], double surveyAvg[
 	}
 }
 
-void displaySurveyAvg(const double surveyAvg[CATEGORIES]) {
+void displaySurveyAvg(const double surveyAvg[CATEGORIES], const char *categoryNames[CATEGORIES]) {
 	printf("%s", "Survey Averages:\n");
-	printf("%s", "\tSafety\tCleanliness\tComfort\n");
 	for (int i = 0; i < CATEGORIES; i++) {
-		printf("\t%.2f\t", surveyAvg[i]);
+		printf("\t\t%s", categoryNames[i]);
+	}
+	puts("\n");
+	for (int i = 0; i < CATEGORIES; i++) {
+		printf("\t\t%.2f", surveyAvg[i]);
 	}
 }
 
 void RidersMode(double baseFare, double costPerMin, double costPerMile, double minFlatRate, const char *name, int totalMinutes, double totalMiles
 , double totalFare, int totalRideCount , int surveyRatings[][CATEGORIES], int surveyCount, const char *username, const char *password,
-double surveyAvg[CATEGORIES], const char categoryNames[CATEGORIES]) {
-	int minMiles = 0;
+double surveyAvg[CATEGORIES]) {
+	int minMiles = 1;
 	int maxMiles = 100;
 	totalRideCount = 0;
 	totalFare = 0;
@@ -363,12 +373,12 @@ double surveyAvg[CATEGORIES], const char categoryNames[CATEGORIES]) {
 	while (!endRider) {
 		printf("%s%s%s", "\nWelcome to ", name, " Ride Share. We can only "
 			"provide services for rides from 1 to 100 miles.\n");
-		displaySurveyRatings(surveyRatings, surveyCount);
+		displaySurveyRatings(surveyRatings, surveyCategories,surveyCount);
 
 		printf("%s", "Do you want to take a ride? Y or N?");
 		char YorN = getYorN();
 		if (YorN == 'Y' || YorN == 'y') {
-			printf("%s", "Enter the number of miles your travelling? 1-100: ");
+			printf("%s%d%s%d%s", "Enter the number of miles your travelling? ", minMiles, " - ", maxMiles, ":");
 			double miles = getValidDoubleSentinel(minMiles, maxMiles, SENTINEL_VALUE);
 			if (miles == SENTINEL_VALUE) {
 				if (LoginAdmin(username, password, SIZE_STRING, MAX_ATTEMPT) == true) {
@@ -395,7 +405,7 @@ double surveyAvg[CATEGORIES], const char categoryNames[CATEGORIES]) {
 				printf("%s", "Do you want to take survey? Y or N:");
 				YorN = getYorN();
 				if (YorN == 'Y' || YorN == 'y') {
-					getSurveyRatings(surveyRatings, categoryNames,&surveyCount, CATEGORIES, MIN_RATING, MAX_RATING);
+					getSurveyRatings(surveyRatings, surveyCategories, &surveyCount, CATEGORIES, MIN_RATING, MAX_RATING);
 					surveyCount++;
 					printf("%s", "Thanks for your feedback. Have a great day! ");
 				}
@@ -409,5 +419,5 @@ double surveyAvg[CATEGORIES], const char categoryNames[CATEGORIES]) {
 	printf("%s", "UCCS Ride Share Business Summary\n\n");
 	printFare(totalRideCount, totalMiles, totalMinutes, totalFare);
 	calculateSurveyAvg(surveyRatings, surveyAvg, surveyCount, CATEGORIES);
-	displaySurveyAvg(surveyAvg);
+	displaySurveyAvg(surveyAvg, surveyCategories);
 }
