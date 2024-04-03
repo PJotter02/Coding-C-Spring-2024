@@ -28,7 +28,6 @@ typedef struct rideshare {
 	double totalMiles;
 	double totalFare;
 	double totalRideCount;
-	char categoryNames[CATEGORIES][SIZE_STRING];
 	int rating[MAX_SURVEY][CATEGORIES];
 	double surveyAvg[CATEGORIES];
 	char organizationName[SIZE_STRING];
@@ -98,8 +97,8 @@ double getValidDouble(int min, int max) {
 	char input[SIZE_STRING] = "";
 	while (!validInput) {
 		//printf("%s%d%s%d", "Enter a number between ", min, " & ", max);
-		FgetsRemoveNewLine(&input);
-		if (scanDouble(&input, &number) == false) {
+		FgetsRemoveNewLine(input);
+		if (scanDouble(input, &number) == false) {
 			printf("%s", "Enter a number.");
 		}
 		else if (number > max || number < min) {
@@ -120,8 +119,8 @@ double getValidDoubleSentinel(int min, int max, int sentinel) {
 	char input[SIZE_STRING] = "";
 	// iterates until validInput is changed to true
 	while (!validInput) {
-		FgetsRemoveNewLine(&input);
-		if (scanDouble(&input, &miles) == false) {
+		FgetsRemoveNewLine(input);
+		if (scanDouble(input, &miles) == false) {
 			printf("%s", "Error: Invalid input. Please enter a number.\n");
 
 			while (getchar() != '\n');
@@ -145,26 +144,28 @@ bool scanDouble(const char* buffer, double *validNumber) {
 	char* end;
 	*validNumber = 0;
 	double intTest = strtod(buffer, &end);
+	bool returnedBool = true;
 
 		if (end == buffer) {
-			return false;
+			returnedBool = false;
 		}
 		else if ('\0' != *end) {
-			return false;
+			returnedBool = false;
 		}
 		else if ((DBL_MIN == intTest || DBL_MAX == intTest) && ERANGE == errno) {
-			return false;
+			returnedBool = false;
 		}
 		else if (intTest > INT_MAX) {
-			return false;
+			returnedBool = false;
 		}
 		else if (intTest < INT_MIN) {
-			return false;
+			returnedBool = false;
 		}
 		else {
 			*validNumber = (double)intTest;
-			return true;
+			returnedBool = true;
 		}
+		return returnedBool;
 }
 
 //Code for getting random time.
@@ -336,6 +337,7 @@ void displaySurveyRatings(const int surveyRatings[][CATEGORIES], const char *cat
 	}
 }
 
+//Function to calculate survey averages
 void calculateSurveyAvg(const int surveyRatings[][CATEGORIES], double surveyAvg[CATEGORIES], int surveyCount, size_t totalCategories) {
 	// size_t iterates through an array in bit sized chunks
 	for (size_t categories = 0; categories < totalCategories; categories++) {
@@ -347,6 +349,7 @@ void calculateSurveyAvg(const int surveyRatings[][CATEGORIES], double surveyAvg[
 	}
 }
 
+//Function to display the surveyAvg
 void displaySurveyAvg(const double surveyAvg[CATEGORIES], const char *categoryNames[CATEGORIES]) {
 	printf("%s", "Survey Averages:\n");
 	for (int i = 0; i < CATEGORIES; i++) {
@@ -358,6 +361,7 @@ void displaySurveyAvg(const double surveyAvg[CATEGORIES], const char *categoryNa
 	}
 }
 
+//Function for ride share
 void RidersMode(double baseFare, double costPerMin, double costPerMile, double minFlatRate, const char *name, int totalMinutes, double totalMiles
 , double totalFare, int totalRideCount , int surveyRatings[][CATEGORIES], int surveyCount, const char *username, const char *password,
 double surveyAvg[CATEGORIES]) {
