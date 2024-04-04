@@ -66,7 +66,9 @@ int main(void) {
 		, CORRECT_ID, CORRECT_PASSCODE, rideShare.surveyAvg);
 
 	}
-	printf("%s", "You reached the max amount of login attempts");
+	else {
+		printf("%s", "You reached the max amount of login attempts");
+	}
 	return 0;
 }
 
@@ -111,7 +113,7 @@ double getValidDouble(int min, int max) {
 	}
 }
 
-// This function is for validating the user input for miles.
+// This function is for validating the user input for miles
 // it ensurse the value is indeed a number and is between 1-100
 double getValidDoubleSentinel(int min, int max, int sentinel) {
 	double miles = 0;
@@ -144,22 +146,22 @@ bool scanDouble(const char* buffer, double *validNumber) {
 	char* end;
 	*validNumber = 0;
 	double intTest = strtod(buffer, &end);
-	bool returnedBool = true;
+	bool returnedBool = false;
 
 		if (end == buffer) {
-			returnedBool = false;
+			
 		}
 		else if ('\0' != *end) {
-			returnedBool = false;
+
 		}
 		else if ((DBL_MIN == intTest || DBL_MAX == intTest) && ERANGE == errno) {
-			returnedBool = false;
+			
 		}
 		else if (intTest > INT_MAX) {
-			returnedBool = false;
+			
 		}
 		else if (intTest < INT_MIN) {
-			returnedBool = false;
+			
 		}
 		else {
 			*validNumber = (double)intTest;
@@ -168,7 +170,7 @@ bool scanDouble(const char* buffer, double *validNumber) {
 		return returnedBool;
 }
 
-//Code for getting random time.
+//Code for getting random time
 int calculateRandomNumber(int min, int max) {
 	int time = rand() % (max - min + 1) + min;
 	return time;
@@ -187,7 +189,6 @@ double calculateFare(double base, double minuteCost, double mileCost, double min
 // Code for printing customer overview and business overview
 void printFare(int count, double miles, int minutes, double fare) {
 	if (count != 0) {
-		printf("%s", "\nCurrent Ride Information\n\n");
 		printf("%s", "Rider  Number of Miles  Number of Minutes  Ride Fare Amount\n");
 		printf("%d      %.1f             %d                 $%.2f\n", count, miles, minutes, fare);
 	}
@@ -204,7 +205,6 @@ bool LoginAdmin(const char* correctUsername, const char* correctPass, int size, 
 	char* usernamePtr = username;
 	char* passPtr = pass;
 
-	//Why does it not jum out of while loop even if attempts exceeds maxAttempts aka 4
 	bool correctLogin = false;
 	while (!correctLogin) {
 
@@ -216,7 +216,7 @@ bool LoginAdmin(const char* correctUsername, const char* correctPass, int size, 
 				printf("%s\n", "Invalid login.");
 				attempts++;
 				if (attempts >= maxAttempts) {
-					return false;
+					correctLogin = false;
 				}
 			}
 		}
@@ -228,13 +228,13 @@ bool LoginAdmin(const char* correctUsername, const char* correctPass, int size, 
 				printf("%s\n", "Incorrect password.");
 				attempts++;
 				if (attempts >= maxAttempts) {
-					return false;
+					correctLogin = false;
 				}
 			}
 		}
 		correctLogin = true;
 	}
-	return true;
+	return correctLogin;
 }
 
 //Removes new line character
@@ -259,7 +259,7 @@ void setUp(RideShare* rideShare) {
 	char input[SIZE_STRING];
 	double number = 0;
 
-	//Promting user for baseFare
+	//Promting admin for baseFare
 	printf("%s", "Enter the amount base fare: ");
 	FgetsRemoveNewLine(input);
 	while (!scanDouble(input, &number) || number > max || number < min) {
@@ -268,7 +268,7 @@ void setUp(RideShare* rideShare) {
 	}
 	rideShare->baseFare = number;
 
-	//Promting user for costPerMin
+	//Promting admin for costPerMin
 	printf("%s\n", "Enter the amount cost per minute: ");
 	FgetsRemoveNewLine(input);
 	while (!scanDouble(input, &number) || number > max || number < min) {
@@ -277,7 +277,7 @@ void setUp(RideShare* rideShare) {
 	}
 	rideShare->costPerMin = number;
 
-	//Promting user for costPerMile
+	//Promting admin for costPerMile
 	printf("%s\n", "Enter the amount cost per mile: ");
 	FgetsRemoveNewLine(input);
 	while (!scanDouble(input, &number) || number > max || number < min) {
@@ -286,7 +286,7 @@ void setUp(RideShare* rideShare) {
 	}
 	rideShare->costPerMile = number;
 
-	//Promting user for minFlatRate
+	//Promting admin for minFlatRate
 	printf("%s\n", "Enter the amount min flat rate: ");
 	FgetsRemoveNewLine(input);
 	while (!scanDouble(input, &number) || number > max || number < min) {
@@ -295,6 +295,8 @@ void setUp(RideShare* rideShare) {
 	}
 	rideShare->minFlatRate = number;
 
+
+	//Prompting admin for org name
 	printf("%s\n", "Enter orgnization name: ");
 	FgetsRemoveNewLine(rideShare->organizationName);
 
