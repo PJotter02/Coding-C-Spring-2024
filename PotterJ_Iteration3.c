@@ -45,15 +45,17 @@ bool scanDouble(const char* buff, double* validNumber);
 void FgetsRemoveNewLine(char* string);
 RideShare* findRideShare(RideShare* headRideSharePtr, char* stringPtr);
 void RidersMode(RideShare* HeadRideSharePtr, const char* username, const char* password);
-void getSurveyRatings(int surveyRatings[][CATEGORIES], const char* categoryNames[CATEGORIES], int* surveyCount, size_t totalCategories, int min, int max);
+void getSurveyRatings(int surveyRatings[][CATEGORIES], const char* categoryNames[CATEGORIES], int surveyCount, size_t totalCategories, int min, int max);
 void calculateSurveyAvg(const int surveyRatings[][CATEGORIES], double surveyAvg[CATEGORIES], int surveyCount, size_t totalCategories);
 void displaySurveyAvg(const double surveyAvg[CATEGORIES], const char* categoryNames[CATEGORIES]);
 void displaySurveyRatings(const int surveyRatings[][CATEGORIES], const char* categoryNames[CATEGORIES], int surveyCount);
 void addRideShare(RideShare** headRideSharePtr);
 void setUp(RideShare* rideShare);
+void printBusinessSummary(RideShare* headRideSharePtr, const char* categoryNames[CATEGORIES]);
 char getYorN();
 
 const char* surveyCategories[CATEGORIES] = { "Safety", "Cleanliness", "Comfort" };
+RideShare rideShare = { 0 };
 
 int main(void) {
 	//Generates random seed to calculate a random number
@@ -62,10 +64,8 @@ int main(void) {
 	if (LoginAdmin(CORRECT_ID, CORRECT_PASSCODE, SIZE_STRING, MAX_ATTEMPT) == true) {
 		RideShare* headRideSharePtr = NULL;
 		addRideShare(&headRideSharePtr);
-		
-		
-		RidersMode(headRideSharePtr);
-
+		RidersMode(headRideSharePtr, CORRECT_ID, CORRECT_PASSCODE);
+		printBusinessSummary(headRideSharePtr, surveyCategories);
 	}
 	else {
 		printf("%s", "You reached the max amount of login attempts");
@@ -317,7 +317,7 @@ void addRideShare(RideShare** headRideSharePtr) {
 			RideShare* previousPtr = NULL;
 			RideShare* currentPtr = *headRideSharePtr;
 
-			while (currentPtr != NULL && strcmp(currentPtr->organizationName, currentPtr->nextRideSharePtr->organizationName) < 0) {
+			while (currentPtr != NULL && currentPtr->nextRideSharePtr != NULL && strcmp(currentPtr->organizationName, currentPtr->nextRideSharePtr->organizationName) < 0) {
 				previousPtr = currentPtr;
 				currentPtr = currentPtr->nextRideSharePtr;
 			}
@@ -343,14 +343,13 @@ void addRideShare(RideShare** headRideSharePtr) {
 }
 
 //Function to store survey ratings in surveyRatings array
-void getSurveyRatings(int surveyRatings[][CATEGORIES], const char* categoryNames[CATEGORIES], int* surveyCount, size_t totalCategories, int min, int max) {
+void getSurveyRatings(int surveyRatings[][CATEGORIES], const char* categoryNames[CATEGORIES], int surveyCount, size_t totalCategories, int min, int max) {
 	int name = 0;
 	for (size_t categories = 0; categories < totalCategories; categories++) {
 		printf("%s%s%s%d%s%d%s", "Enter ", categoryNames[name], " rating(", min, "-", max, ")");
-		surveyRatings[*surveyCount][categories] = getValidDouble(min, max);
+		surveyRatings[surveyCount][categories] = getValidDouble(min, max);
 		name++;
 	}
-	surveyCount++;
 }
 
 //Function to display current ratings
@@ -415,6 +414,31 @@ void displaySurveyAvg(const double surveyAvg[CATEGORIES], const char* categoryNa
 	}
 }
 
+void printBusinessSummary(RideShare* headRideSharePtr, const char* categoryNames[CATEGORIES]) {
+	RideShare* currentPtr = headRideSharePtr;
+	while (currentPtr != NULL) {
+		printf("%s%s", currentPtr->organizationName, " : Business Summary");
+		if (currentPtr->totalRideCount != 0) {
+			printf("%s", "Rider  Number of Miles  Number of Minutes  Ride Fare Amount\n");
+			printf("%d      %.1f             %d                 $%.2f\n", currentPtr->totalRideCount, currentPtr->totalMiles,
+				currentPtr->totalMinutes, currentPtr->totalFare);
+			if (currentPtr->surveyCount != 0) {
+				printf("%s", "Survey Averages:\n");
+				for (int i = 0; i < CATEGORIES; i++) {
+					printf("\t\t%s", categoryNames[i]);
+				}
+				puts("\n");
+				for (int i = 0; i < CATEGORIES; i++) {
+					printf("\t\t%.2f", currentPtr->surveyAvg[i]);
+				}
+			}
+		}
+		else {
+			printf("There were no rides.");
+		}
+	}
+}
+
 //Function for ride share
 /////
 ///////////////////////////
@@ -424,29 +448,21 @@ void RidersMode(RideShare *HeadRideSharePtr, const char* username, const char* p
 	int maxMiles = 100;
 
 	bool endRider = false;
-	RideShare* current = NULL;
 
 	while (!endRider) {
 		printf("%s", "Type in ride share name: ");
 		char input[SIZE_STRING];
 		FgetsRemoveNewLine(input);
-		current = findRideShare(HeadRideSharePtr, input);
-		if (current->found == true) {
-			unsigned int totalRideCount = current->totalRideCount;
-			unsigned int totalFare = current->totalFare;
-			unsigned int totalMiles = current->totalMiles;
-			unsigned int totalMinutes = current->totalMinutes;
-			char name[SIZE_STRING] = current->organizationName;
-			unsigned int surveyCount = current->surveyCount;
-			int surveyRatings[MAX_SURVEY][CATEGORIES];
+		RideShare *current = findRideShare(HeadRideSharePtr, input);
+		if (current != NULL && current->found == true) {
 			double baseFare = current->baseFare;
 			double costPerMin = current->costPerMin;
 			double costPerMile = current->costPerMile;
 			double minFlatRate = current->minFlatRate;
 
-			printf("%s%s%s", "\nWelcome to ", name, " Ride Share. We can only "
+			printf("%s%s%s", "\nWelcome to ", current->organizationName, " Ride Share. We can only "
 				"provide services for rides from 1 to 100 miles.\n");
-			displaySurveyRatings(surveyRatings, surveyCategories, surveyCount);
+			displaySurveyRatings(current->rating, surveyCategories, current->surveyCount);
 
 			printf("%s", "Do you want to take a ride? Y or N?");
 			char YorN = getYorN();
@@ -459,7 +475,7 @@ void RidersMode(RideShare *HeadRideSharePtr, const char* username, const char* p
 					}
 				}
 				else {
-					totalRideCount += 1;
+					current->totalRideCount += 1;
 					int minRandomMinutes = MIN_RAND_MINUTES_FACTOR * miles;
 					int maxRandomMinutes = MAX_RAND_MINUTES_FACTOR * miles;
 
@@ -468,18 +484,18 @@ void RidersMode(RideShare *HeadRideSharePtr, const char* username, const char* p
 					double rideTotal = calculateFare(baseFare, costPerMin, costPerMile, minFlatRate, miles, rideTime);
 
 					//incrementing total values for business owner
-					totalMiles += miles;
-					totalMinutes += rideTime;
-					totalFare += rideTotal;
+					current->totalMiles += miles;
+					current->totalMinutes += rideTime;
+					current->totalFare += rideTotal;
 
 					printf("\nCustomer Summary\n");
-					printFare(totalRideCount, miles, rideTime, rideTotal);
+					printFare(current->totalRideCount, miles, rideTime, rideTotal);
 
 					printf("%s", "Do you want to take survey? Y or N:");
 					YorN = getYorN();
 					if (YorN == 'Y' || YorN == 'y') {
-						getSurveyRatings(surveyRatings, surveyCategories, &surveyCount, CATEGORIES, MIN_RATING, MAX_RATING);
-						surveyCount++;
+						getSurveyRatings(current->rating, surveyCategories, current->surveyCount, CATEGORIES, MIN_RATING, MAX_RATING);
+						current->surveyCount++;
 						printf("%s", "Thanks for your feedback. Have a great day! ");
 					}
 					else {
@@ -493,8 +509,8 @@ void RidersMode(RideShare *HeadRideSharePtr, const char* username, const char* p
 		}
 	}
 	// This part is for the business owner and executes once the sentinel value is input
-	printf("%s", "UCCS Ride Share Business Summary\n\n");
-	printFare(current->totalRideCount, current->totalMiles, current->totalMinutes, current->totalFare);
-	calculateSurveyAvg(current->rating, current->surveyAvg, current->surveyCount, CATEGORIES);
-	displaySurveyAvg(current->surveyAvg, surveyCategories);
+	//printf("%s", "UCCS Ride Share Business Summary\n\n");
+	//printFare(current->totalRideCount, current->totalMiles, current->totalMinutes, current->totalFare);
+	//calculateSurveyAvg(current->rating, current->surveyAvg, current->surveyCount, CATEGORIES);
+	//displaySurveyAvg(current->surveyAvg, surveyCategories);
 }
