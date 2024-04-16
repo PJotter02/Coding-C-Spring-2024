@@ -206,7 +206,7 @@ bool LoginAdmin(const char* correctUsername, const char* correctPass, int size, 
 	char* passPtr = pass;
 
 	bool correctLogin = false;
-	while (!correctLogin) {
+	while (!correctLogin && attempts <= MAX_ATTEMPT) {
 
 		//While loop to compare logins
 		while (strcmp(username, correctUsername) != 0) {
@@ -307,6 +307,7 @@ void setUp(RideShare* rideShare) {
 	printf("%s%s\n", "Organization Name: ", rideShare->organizationName);
 }
 
+//
 void addRideShare(RideShare** headRideSharePtr) {
 	bool another = true;
 	do {
@@ -385,6 +386,7 @@ void calculateSurveyAvg(const int surveyRatings[][CATEGORIES], double surveyAvg[
 	}
 }
 
+//
 RideShare* findRideShare(RideShare* headRideSharePtr, char* stringPtr) {
 	RideShare *currentPtr = headRideSharePtr;
 	RideShare* correctPtr = NULL;
@@ -414,36 +416,38 @@ void displaySurveyAvg(const double surveyAvg[CATEGORIES], const char* categoryNa
 	}
 }
 
+//
 void printBusinessSummary(RideShare* headRideSharePtr, const char* categoryNames[CATEGORIES]) {
 	RideShare* currentPtr = headRideSharePtr;
 	while (currentPtr != NULL) {
-		printf("%s%s", currentPtr->organizationName, " : Business Summary");
+		calculateSurveyAvg(currentPtr->rating, currentPtr->surveyAvg, currentPtr->surveyCount, CATEGORIES);
+		printf("%s : Business Summary\n", currentPtr->organizationName);
 		if (currentPtr->totalRideCount != 0) {
-			printf("%s", "Rider  Number of Miles  Number of Minutes  Ride Fare Amount\n");
-			printf("%d      %.1f             %d                 $%.2f\n", currentPtr->totalRideCount, currentPtr->totalMiles,
+			printf("Rider\tNumber of Miles\tNumber of Minutes\tRide Fare Amount\n");
+			printf("%d\t%.1f\t\t%d\t\t$%.2f\n", currentPtr->totalRideCount, currentPtr->totalMiles,
 				currentPtr->totalMinutes, currentPtr->totalFare);
 			if (currentPtr->surveyCount != 0) {
-				printf("%s", "Survey Averages:\n");
+				printf("Survey Averages:\n");
 				for (int i = 0; i < CATEGORIES; i++) {
-					printf("\t\t%s", categoryNames[i]);
+					printf("\t%s", categoryNames[i]);
 				}
-				puts("\n");
+				printf("\n");
 				for (int i = 0; i < CATEGORIES; i++) {
-					printf("\t\t%.2f", currentPtr->surveyAvg[i]);
+					printf("\t%.2f", currentPtr->surveyAvg[i]);
 				}
+				printf("\n");
 			}
 		}
 		else {
-			printf("There were no rides.");
+			printf("%s : There were no rides.\n", currentPtr->organizationName);
 		}
+		//iterates to next node
+		currentPtr = currentPtr->nextRideSharePtr;  
 	}
 }
 
 //Function for ride share
-/////
-///////////////////////////
-////////////////////////////////
-void RidersMode(RideShare *HeadRideSharePtr, const char* username, const char* password) {
+void RidersMode(RideShare* HeadRideSharePtr, const char* username, const char* password) {
 	int minMiles = 1;
 	int maxMiles = 100;
 
@@ -453,7 +457,7 @@ void RidersMode(RideShare *HeadRideSharePtr, const char* username, const char* p
 		printf("%s", "Type in ride share name: ");
 		char input[SIZE_STRING];
 		FgetsRemoveNewLine(input);
-		RideShare *current = findRideShare(HeadRideSharePtr, input);
+		RideShare* current = findRideShare(HeadRideSharePtr, input);
 		if (current != NULL && current->found == true) {
 			double baseFare = current->baseFare;
 			double costPerMin = current->costPerMin;
@@ -508,9 +512,4 @@ void RidersMode(RideShare *HeadRideSharePtr, const char* username, const char* p
 			printf("%s", "No ride share match. Please re-enter.");
 		}
 	}
-	// This part is for the business owner and executes once the sentinel value is input
-	//printf("%s", "UCCS Ride Share Business Summary\n\n");
-	//printFare(current->totalRideCount, current->totalMiles, current->totalMinutes, current->totalFare);
-	//calculateSurveyAvg(current->rating, current->surveyAvg, current->surveyCount, CATEGORIES);
-	//displaySurveyAvg(current->surveyAvg, surveyCategories);
 }
