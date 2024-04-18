@@ -17,7 +17,7 @@
 #define SIZE_STRING 80
 #define MAX_ATTEMPT 4
 #define SENTINEL_VALUE -1
-#define FILE_PATH "C:\\rideshare\\"
+#define FILE_PATH "C:/rideshare/"
 
 typedef struct rideshare {
 	double baseFare;
@@ -68,6 +68,7 @@ int main(void) {
 		addRideShare(&headRideSharePtr);
 		RidersMode(headRideSharePtr, CORRECT_ID, CORRECT_PASSCODE);
 		printBusinessSummary(headRideSharePtr, surveyCategories);
+		writeToFile(headRideSharePtr);
 	}
 	else {
 		printf("%s", "You reached the max amount of login attempts");
@@ -452,10 +453,20 @@ void writeToFile(RideShare* headRideSharePtr) {
 	RideShare* current = headRideSharePtr;
 	while (current != NULL) {
 		FILE* filePtr;
-		char name[SIZE_STRING] =current->organizationName;
-		if (filePtr = fopen(FILE_PATH + name, 'w') == NULL) {
-
+		char path[SIZE_STRING] = FILE_PATH;
+		strcat(path, current->organizationName);
+		filePtr = fopen(path, "w");
+		if (filePtr  == NULL) {
+			printf("%s", "Failed to open file.");
 		}
+		else {
+			fprintf(filePtr, "%s Business Summary: \n", current->organizationName);
+			fprintf(filePtr, "%s\t%s\t%s\t%s\n", "Rider", "Number of Miles", "Number of Minutes", "Ride Fare Amount");
+			fprintf(filePtr, "%d\t%.1f\t\t%d\t\t$%.2f\n", current->totalRideCount, current->totalMiles,
+				current->totalMinutes, current->totalFare);
+			fclose(filePtr);
+		}
+		current = current->nextRideSharePtr;
 	}
 }
 
