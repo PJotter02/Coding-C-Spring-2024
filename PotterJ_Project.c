@@ -205,7 +205,7 @@ bool LoginAdmin(const char* correctUsername, const char* correctPass, int size, 
 	char* passPtr = pass;
 
 	bool correctLogin = false;
-	while (!correctLogin) {
+	while (!correctLogin && attempts < maxAttempts) {
 
 		//While loop to compare logins
 		while (strcmp(username, correctUsername) != 0) {

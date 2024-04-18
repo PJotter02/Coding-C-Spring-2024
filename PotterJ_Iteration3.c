@@ -17,6 +17,7 @@
 #define SIZE_STRING 80
 #define MAX_ATTEMPT 4
 #define SENTINEL_VALUE -1
+#define FILE_PATH "C:\\rideshare\\"
 
 typedef struct rideshare {
 	double baseFare;
@@ -53,6 +54,7 @@ void addRideShare(RideShare** headRideSharePtr);
 void setUp(RideShare* rideShare);
 void printBusinessSummary(RideShare* headRideSharePtr, const char* categoryNames[CATEGORIES]);
 char getYorN();
+void writeToFile(RideShare* headRideSharePtr);
 
 const char* surveyCategories[CATEGORIES] = { "Safety", "Cleanliness", "Comfort" };
 RideShare rideShare = { 0 };
@@ -443,6 +445,17 @@ void printBusinessSummary(RideShare* headRideSharePtr, const char* categoryNames
 		}
 		//iterates to next node
 		currentPtr = currentPtr->nextRideSharePtr;  
+	}
+}
+
+void writeToFile(RideShare* headRideSharePtr) {
+	RideShare* current = headRideSharePtr;
+	while (current != NULL) {
+		FILE* filePtr;
+		char name[SIZE_STRING] =current->organizationName;
+		if (filePtr = fopen(FILE_PATH + name, 'w') == NULL) {
+
+		}
 	}
 }
 
