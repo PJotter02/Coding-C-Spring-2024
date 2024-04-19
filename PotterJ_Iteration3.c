@@ -55,6 +55,7 @@ void setUp(RideShare* rideShare);
 void printBusinessSummary(RideShare* headRideSharePtr, const char* categoryNames[CATEGORIES]);
 char getYorN();
 void writeToFile(RideShare* headRideSharePtr);
+void freeMemory(RideShare** HeadRideSharePtr);
 
 const char* surveyCategories[CATEGORIES] = { "Safety", "Cleanliness", "Comfort" };
 RideShare rideShare = { 0 };
@@ -69,6 +70,7 @@ int main(void) {
 		RidersMode(headRideSharePtr, CORRECT_ID, CORRECT_PASSCODE);
 		printBusinessSummary(headRideSharePtr, surveyCategories);
 		writeToFile(headRideSharePtr);
+		freeMemory(&headRideSharePtr);
 	}
 	else {
 		printf("%s", "You reached the max amount of login attempts");
@@ -310,7 +312,7 @@ void setUp(RideShare* rideShare) {
 	printf("%s%s\n", "Organization Name: ", rideShare->organizationName);
 }
 
-//
+//Function to add rideshares to the linked list
 void addRideShare(RideShare** headRideSharePtr) {
 	bool another = true;
 	do {
@@ -389,7 +391,7 @@ void calculateSurveyAvg(const int surveyRatings[][CATEGORIES], double surveyAvg[
 	}
 }
 
-//
+//Function to match user input to a Rideshare
 RideShare* findRideShare(RideShare* headRideSharePtr, char* stringPtr) {
 	RideShare *currentPtr = headRideSharePtr;
 	RideShare* correctPtr = NULL;
@@ -419,14 +421,14 @@ void displaySurveyAvg(const double surveyAvg[CATEGORIES], const char* categoryNa
 	}
 }
 
-//
+//Iterates through all rideshares and print their information 
 void printBusinessSummary(RideShare* headRideSharePtr, const char* categoryNames[CATEGORIES]) {
 	RideShare* currentPtr = headRideSharePtr;
 	while (currentPtr != NULL) {
 		calculateSurveyAvg(currentPtr->rating, currentPtr->surveyAvg, currentPtr->surveyCount, CATEGORIES);
 		printf("%s : Business Summary\n", currentPtr->organizationName);
 		if (currentPtr->totalRideCount != 0) {
-			printf("Rider\tNumber of Miles\tNumber of Minutes\tRide Fare Amount\n");
+			printf("%s\t%s\t%s\t%s\n", "Rider", "Number of Miles", "Number of Minutes", "Ride Fare Amount");
 			printf("%d\t%.1f\t\t%d\t\t$%.2f\n", currentPtr->totalRideCount, currentPtr->totalMiles,
 				currentPtr->totalMinutes, currentPtr->totalFare);
 			if (currentPtr->surveyCount != 0) {
@@ -434,11 +436,12 @@ void printBusinessSummary(RideShare* headRideSharePtr, const char* categoryNames
 				for (int i = 0; i < CATEGORIES; i++) {
 					printf("\t%s", categoryNames[i]);
 				}
-				printf("\n");
+				puts("\n");
 				for (int i = 0; i < CATEGORIES; i++) {
 					printf("\t%.2f", currentPtr->surveyAvg[i]);
 				}
-				printf("\n");
+				puts("\n");
+				puts("\n");
 			}
 		}
 		else {
@@ -449,6 +452,7 @@ void printBusinessSummary(RideShare* headRideSharePtr, const char* categoryNames
 	}
 }
 
+//Function to write all rideshare info to file located in C:/RideShare/
 void writeToFile(RideShare* headRideSharePtr) {
 	RideShare* current = headRideSharePtr;
 	while (current != NULL) {
@@ -464,7 +468,12 @@ void writeToFile(RideShare* headRideSharePtr) {
 			fprintf(filePtr, "%s\t%s\t%s\t%s\n", "Rider", "Number of Miles", "Number of Minutes", "Ride Fare Amount");
 			fprintf(filePtr, "%d\t%.1f\t\t%d\t\t$%.2f\n", current->totalRideCount, current->totalMiles,
 				current->totalMinutes, current->totalFare);
-			fclose(filePtr);
+			for (int i = 0; i < CATEGORIES; i++) {
+				fprintf(filePtr, "%s\t", surveyCategories[i]);
+			}
+			for (int i = 0; i < CATEGORIES; i++) {
+				fprintf(filePtr, "%s\t", current->surveyAvg[i]);
+			}
 		}
 		current = current->nextRideSharePtr;
 	}
@@ -478,7 +487,9 @@ void RidersMode(RideShare* HeadRideSharePtr, const char* username, const char* p
 	bool endRider = false;
 
 	while (!endRider) {
-		printf("%s", "Type in ride share name: ");
+		printBusinessSummary(HeadRideSharePtr, surveyCategories);
+		puts("\n");
+		printf("\n%s", "Type in ride share name: ");
 		char input[SIZE_STRING];
 		FgetsRemoveNewLine(input);
 		RideShare* current = findRideShare(HeadRideSharePtr, input);
@@ -524,10 +535,10 @@ void RidersMode(RideShare* HeadRideSharePtr, const char* username, const char* p
 					if (YorN == 'Y' || YorN == 'y') {
 						getSurveyRatings(current->rating, surveyCategories, current->surveyCount, CATEGORIES, MIN_RATING, MAX_RATING);
 						current->surveyCount++;
-						printf("%s", "Thanks for your feedback. Have a great day! ");
+						printf("%s\n", "Thanks for your feedback. Have a great day! ");
 					}
 					else {
-						printf("%s", "Thanks for riding! Have a splendid day!");
+						printf("%s\n", "Thanks for riding! Have a splendid day!");
 					}
 				}
 			}
@@ -536,4 +547,19 @@ void RidersMode(RideShare* HeadRideSharePtr, const char* username, const char* p
 			printf("%s", "No ride share match. Please re-enter.");
 		}
 	}
+}
+
+void freeMemory(RideShare** HeadRideSharePtr) {
+
+	RideShare* currentPtr = *HeadRideSharePtr;
+	RideShare* nextRideSharePtr = NULL;
+
+	while (currentPtr != NULL)
+	{
+		nextRideSharePtr = currentPtr->nextRideSharePtr;
+		free(currentPtr);
+		currentPtr = nextRideSharePtr;
+	}
+
+	*HeadRideSharePtr = NULL;
 }
