@@ -49,7 +49,7 @@ void RidersMode(RideShare* HeadRideSharePtr, const char* username, const char* p
 void getSurveyRatings(int surveyRatings[][CATEGORIES], const char* categoryNames[CATEGORIES], int surveyCount, size_t totalCategories, int min, int max);
 void calculateSurveyAvg(const int surveyRatings[][CATEGORIES], double surveyAvg[CATEGORIES], int surveyCount, size_t totalCategories);
 void displaySurveyAvg(const double surveyAvg[CATEGORIES], const char* categoryNames[CATEGORIES]);
-void displaySurveyRatings(const int surveyRatings[][CATEGORIES], const char* categoryNames[CATEGORIES], int surveyCount);
+void displaySurveyRatings(RideShare* headRideSharePtr, const char* categoryNames[CATEGORIES]);
 void addRideShare(RideShare** headRideSharePtr);
 void setUp(RideShare* rideShare);
 void printBusinessSummary(RideShare* headRideSharePtr, const char* categoryNames[CATEGORIES]);
@@ -207,39 +207,33 @@ bool LoginAdmin(const char* correctUsername, const char* correctPass, int size, 
 	int attempts = 0;
 	char username[SIZE_STRING];
 	char pass[SIZE_STRING];
-	char* usernamePtr = username;
-	char* passPtr = pass;
-
 	bool correctLogin = false;
-	while (!correctLogin && attempts <= MAX_ATTEMPT) {
 
-		//While loop to compare logins
-		while (strcmp(username, correctUsername) != 0) {
-			printf("%s", "Enter your username: ");
-			FgetsRemoveNewLine(usernamePtr);
-			if (strcmp(username, correctUsername) != 0) {
-				printf("%s\n", "Invalid login.");
+	while (attempts < maxAttempts && !correctLogin) {
+		// Get username from user
+		printf("Enter your username: ");
+		FgetsRemoveNewLine(username);
+
+		if (strcmp(username, correctUsername) == 0) {
+			// Username is correct, now ask for password
+			printf("Enter your password: ");
+			FgetsRemoveNewLine(pass);
+
+			if (strcmp(pass, correctPass) == 0) {
+				correctLogin = true; // Correct password
+			}
+			else {
+				printf("Incorrect password.\n");
 				attempts++;
-				if (attempts >= maxAttempts) {
-					correctLogin = false;
-				}
 			}
 		}
-
-		while (strcmp(pass, correctPass) != 0) {
-			printf("%s", "Enter your password: ");
-			FgetsRemoveNewLine(passPtr);
-			if (strcmp(pass, correctPass) != 0) {
-				printf("%s\n", "Incorrect password.");
-				attempts++;
-				if (attempts >= maxAttempts) {
-					correctLogin = false;
-				}
-			}
+		else {
+			printf("Invalid username.\n");
+			attempts++;
 		}
-		correctLogin = true;
 	}
-	return correctLogin;
+
+	return correctLogin; // Return the result of login attempt
 }
 
 //Removes new line character
@@ -359,23 +353,28 @@ void getSurveyRatings(int surveyRatings[][CATEGORIES], const char* categoryNames
 }
 
 //Function to display current ratings
-void displaySurveyRatings(const int surveyRatings[][CATEGORIES], const char* categoryNames[CATEGORIES], int surveyCount) {
-	printf("Survey Results:\n");
-	if (surveyCount > 0) {
-		for (int i = 0; i < CATEGORIES; i++) {
-			printf("\t\t%s", categoryNames[i]);
-		}
-		puts("\n");
-		for (int i = 0; i < surveyCount; i++) {
-			printf("Survey #%d", i);
-			for (int e = 0; e < CATEGORIES; e++) {
-				printf("\t%d\t", surveyRatings[i][e]);
+void displaySurveyRatings(RideShare* headRideSharePtr, const char* categoryNames[CATEGORIES]) {
+	RideShare* currentPtr = headRideSharePtr;
+	while (currentPtr != NULL) {
+		printf("%s%s%s\n", "RideShare Organization ", currentPtr->organizationName, " Ratings");
+		printf("%s\n", "Survey Ratings");
+		if (currentPtr->surveyCount > 0) {
+			for (int i = 0; i < CATEGORIES; i++) {
+				printf("\t\t%s", categoryNames[i]);
 			}
-			printf("\n");
+			puts("\n");
+			for (int i = 0; i < currentPtr->surveyCount; i++) {
+				printf("Survey #%d", i);
+				for (int e = 0; e < CATEGORIES; e++) {
+					printf("\t%d\t", currentPtr->rating[i][e]);
+				}
+				puts("\n\n");
+			}
 		}
-	}
-	else {
-		printf("%s", "No ratings currently\n");
+		else {
+			printf("%s", "No ratings currently\n\n");
+		}
+		currentPtr = currentPtr->nextRideSharePtr;
 	}
 }
 
@@ -397,7 +396,7 @@ RideShare* findRideShare(RideShare* headRideSharePtr, char* stringPtr) {
 	RideShare* correctPtr = NULL;
 	while (currentPtr != NULL) {
 
-		if (strcmp(stringPtr, currentPtr->organizationName) == 0) {
+		if (_strcmpi(stringPtr, currentPtr->organizationName) == 0) {
 			correctPtr = currentPtr;
 			correctPtr->found = true;
 			return correctPtr;
@@ -487,10 +486,10 @@ void RidersMode(RideShare* HeadRideSharePtr, const char* username, const char* p
 	bool endRider = false;
 
 	while (!endRider) {
-		printBusinessSummary(HeadRideSharePtr, surveyCategories);
+		displaySurveyRatings(HeadRideSharePtr, surveyCategories);
 		puts("\n");
 		printf("\n%s", "Type in ride share name: ");
-		char input[SIZE_STRING];
+		char input[SIZE_STRING] = { 0 };
 		FgetsRemoveNewLine(input);
 		RideShare* current = findRideShare(HeadRideSharePtr, input);
 		if (current != NULL && current->found == true) {
@@ -501,7 +500,6 @@ void RidersMode(RideShare* HeadRideSharePtr, const char* username, const char* p
 
 			printf("%s%s%s", "\nWelcome to ", current->organizationName, " Ride Share. We can only "
 				"provide services for rides from 1 to 100 miles.\n");
-			displaySurveyRatings(current->rating, surveyCategories, current->surveyCount);
 
 			printf("%s", "Do you want to take a ride? Y or N?");
 			char YorN = getYorN();
@@ -544,7 +542,7 @@ void RidersMode(RideShare* HeadRideSharePtr, const char* username, const char* p
 			}
 		}
 		else {
-			printf("%s", "No ride share match. Please re-enter.");
+			printf("%s\n", "No ride share match. Please re-enter.");
 		}
 	}
 }
