@@ -465,13 +465,13 @@ void writeToFile(RideShare* headRideSharePtr) {
 		else {
 			fprintf(filePtr, "%s Business Summary: \n", current->organizationName);
 			fprintf(filePtr, "%s\t%s\t%s\t%s\n", "Rider", "Number of Miles", "Number of Minutes", "Ride Fare Amount");
-			fprintf(filePtr, "%d\t%.1f\t\t%d\t\t$%.2f\n", current->totalRideCount, current->totalMiles,
+			fprintf(filePtr, "%.1f\t%.1f\t\t%d\t\t$%.2f\n", current->totalRideCount, current->totalMiles,
 				current->totalMinutes, current->totalFare);
 			for (int i = 0; i < CATEGORIES; i++) {
 				fprintf(filePtr, "%s\t", surveyCategories[i]);
 			}
 			for (int i = 0; i < CATEGORIES; i++) {
-				fprintf(filePtr, "%s\t", current->surveyAvg[i]);
+				fprintf(filePtr, "%.2f\t", current->surveyAvg[i]);
 			}
 		}
 		current = current->nextRideSharePtr;
