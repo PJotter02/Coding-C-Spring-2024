@@ -4,6 +4,7 @@
 #include <time.h>
 #include <float.h>
 #include <string.h>
+#include <ctype.h>
 
 // used to generate random number of minutes based on number of miles
 #define MIN_RAND_MINUTES_FACTOR 1.2
@@ -56,6 +57,8 @@ void printBusinessSummary(RideShare* headRideSharePtr, const char* categoryNames
 char getYorN();
 void writeToFile(RideShare* headRideSharePtr);
 void freeMemory(RideShare** HeadRideSharePtr);
+int strcmpInsensitive(const char* str1, const char* str2);
+void displayRideShareRates(RideShare* HeadRideSharePtr);
 
 const char* surveyCategories[CATEGORIES] = { "Safety", "Cleanliness", "Comfort" };
 RideShare rideShare = { 0 };
@@ -396,7 +399,7 @@ RideShare* findRideShare(RideShare* headRideSharePtr, char* stringPtr) {
 	RideShare* correctPtr = NULL;
 	while (currentPtr != NULL) {
 
-		if (_strcmpi(stringPtr, currentPtr->organizationName) == 0) {
+		if (strcmpInsensitive(stringPtr, currentPtr->organizationName) == 0) {
 			correctPtr = currentPtr;
 			correctPtr->found = true;
 			return correctPtr;
@@ -428,7 +431,7 @@ void printBusinessSummary(RideShare* headRideSharePtr, const char* categoryNames
 		printf("%s : Business Summary\n", currentPtr->organizationName);
 		if (currentPtr->totalRideCount != 0) {
 			printf("%s\t%s\t%s\t%s\n", "Rider", "Number of Miles", "Number of Minutes", "Ride Fare Amount");
-			printf("%d\t%.1f\t\t%d\t\t$%.2f\n", currentPtr->totalRideCount, currentPtr->totalMiles,
+			printf("%.1f\t%.1f\t\t%d\t\t$%.2f\n", currentPtr->totalRideCount, currentPtr->totalMiles,
 				currentPtr->totalMinutes, currentPtr->totalFare);
 			if (currentPtr->surveyCount != 0) {
 				printf("Survey Averages:\n");
@@ -487,6 +490,7 @@ void RidersMode(RideShare* HeadRideSharePtr, const char* username, const char* p
 
 	while (!endRider) {
 		displaySurveyRatings(HeadRideSharePtr, surveyCategories);
+		displayRideShareRates(HeadRideSharePtr);
 		puts("\n");
 		printf("\n%s", "Type in ride share name: ");
 		char input[SIZE_STRING] = { 0 };
@@ -547,7 +551,28 @@ void RidersMode(RideShare* HeadRideSharePtr, const char* username, const char* p
 	}
 }
 
+//Function that is very similar to strcmp just make it not case sensitive
+int strcmpInsensitive(const char* str1, const char* str2) {
+	char c1 = '0';
+	char c2 = '0';
+	do {
+
+		//Iterates through the string and converts each character to lower case
+		//using the tolower function inside of the ctype.h library
+		c1 = tolower(*str1++);
+		c2 = tolower(*str2++);
+	
+		//while the character stored in c1 and c2 are equal to each other and the first character is not null
+		//
+	} while (c1 == c2 && c1 != '\0');
+
+	//Return the difference between the two chars
+	return (unsigned char)c1 - (unsigned char)c2;
+}
+
+//Function to freeMemory we allocated in the heapp for ride shares
 void freeMemory(RideShare** HeadRideSharePtr) {
+
 
 	RideShare* currentPtr = *HeadRideSharePtr;
 	RideShare* nextRideSharePtr = NULL;
@@ -560,4 +585,16 @@ void freeMemory(RideShare** HeadRideSharePtr) {
 	}
 
 	*HeadRideSharePtr = NULL;
+}
+
+void displayRideShareRates(RideShare* HeadRideSharePtr) {
+	RideShare* currentPtr = HeadRideSharePtr;
+	while (currentPtr != NULL) {
+		printf("%s%s", currentPtr->organizationName, " Organization Rates");
+		printf("Base Fare: %.2f", currentPtr->baseFare);
+		printf("Cost Per Minute: %.2f", currentPtr->costPerMin);
+		printf("Cost Per Mile: %.2f", currentPtr->costPerMile);
+		printf("Minimum Flat Rate: %.2f", currentPtr->minFlatRate);
+		currentPtr = currentPtr->nextRideSharePtr;
+	}
 }
